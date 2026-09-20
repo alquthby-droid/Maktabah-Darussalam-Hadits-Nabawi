@@ -1,0 +1,6 @@
+{
+  "name": "Maktabah Darussalam Hadits",
+  "description": "Aplikasi Ensiklopedia & Pembaca Hadits Digital Maktabah Darussalam dengan visualisasi sanad graph D3.js, modul Al-Jarh wa At-Ta'dil, Al-Mu'jam Al-Mufahras, statistik progres membaca, dan syarah turats. Dikembangkan oleh Al-Faqir Husni, S. Kom. I, Penyuluh Agama Islam Kemenag Lombok Barat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

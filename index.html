@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      // Gracefully handle benign Vite HMR websocket connection messages in container preview
+      (function() {
+        // 1. Mock WebSocket for Vite HMR to prevent connection failures in sandboxed reverse-proxy environments
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var NativeWebSocket = window.WebSocket;
+          function MockViteWebSocket(url, protocols) {
+            var isVite = (protocols === 'vite-hmr' || protocols === 'vite-ping') ||
+                         (typeof url === 'string' && (url.indexOf('token=') !== -1 || url.indexOf(':24678') !== -1));
+            if (isVite) {
+              var target = new EventTarget();
+              target.readyState = 1; // WebSocket.OPEN
+              target.OPEN = 1;
+              target.CLOSED = 3;
+              target.CLOSING = 2;
+              target.CONNECTING = 0;
+              target.send = function() {};
+              target.close = function() {};
+              target.binaryType = 'blob';
+              target.protocol = typeof protocols === 'string' ? protocols : 'vite-hmr';
+              target.extensions = '';
+              target.bufferedAmount = 0;
+              return target;
+            }
+            return new NativeWebSocket(url, protocols);
+          }
+          MockViteWebSocket.prototype = NativeWebSocket.prototype;
+          MockViteWebSocket.CONNECTING = 0;
+          MockViteWebSocket.OPEN = 1;
+          MockViteWebSocket.CLOSING = 2;
+          MockViteWebSocket.CLOSED = 3;
+          window.WebSocket = MockViteWebSocket;
+        }
+
+        // 2. Intercept console.error and console.warn for any benign Vite logs
+        var _origError = console.error;
+        console.error = function() {
+          var first = arguments[0];
+          if (typeof first === 'string' && (first.indexOf('[vite]') !== -1 || first.indexOf('vite-hmr') !== -1)) {
+            console.debug.apply(console, arguments);
+            return;
+          }
+          _origError.apply(console, arguments);
+        };
+
+        var _origWarn = console.warn;
+        console.warn = function() {
+          var first = arguments[0];
+          if (typeof first === 'string' && (first.indexOf('[vite]') !== -1 || first.indexOf('vite-hmr') !== -1)) {
+            console.debug.apply(console, arguments);
+            return;
+          }
+          _origWarn.apply(console, arguments);
+        };
+
+        // 3. Catch unhandled errors or rejections mentioning [vite]
+        window.addEventListener('error', function(event) {
+          if (event && (
+            (event.message && event.message.indexOf('[vite]') !== -1) ||
+            (event.filename && event.filename.indexOf('@vite/client') !== -1)
+          )) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          if (event && event.reason && String(event.reason).indexOf('[vite]') !== -1) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+          }
+        }, true);
+      })();
+    </script>
+    <title>Maktabah Darussalam Hadits</title>
+    <meta name="description" content="Aplikasi Ensiklopedia & Pembaca Hadits Digital Maktabah Darussalam dengan visualisasi sanad graph D3.js, modul Al-Jarh wa At-Ta'dil, Al-Mu'jam Al-Mufahras, statistik progres membaca, dan syarah turats. Dikembangkan oleh Al-Faqir Husni, S. Kom. I, Penyuluh Agama Islam Kemenag Lombok Barat." />
+    <meta property="og:title" content="Maktabah Darussalam Hadits" />
+    <meta property="og:description" content="Aplikasi Ensiklopedia & Pembaca Hadits Digital Maktabah Darussalam dengan visualisasi sanad graph D3.js, modul Al-Jarh wa At-Ta'dil, Al-Mu'jam Al-Mufahras, statistik progres membaca, dan syarah turats. Dikembangkan oleh Al-Faqir Husni, S. Kom. I, Penyuluh Agama Islam Kemenag Lombok Barat." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Android & Chrome PWA Tags -->
+    <meta name="theme-color" content="#0f3d21" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iOS Safari PWA & Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Darussalam" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.font-arabic-amiri {
+  font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+  direction: rtl;
+  text-align: right;
+  line-height: 2.2;
+}
+
+.font-arabic-scheherazade {
+  font-family: 'Scheherazade New', 'Amiri', 'Traditional Arabic', serif;
+  direction: rtl;
+  text-align: right;
+  line-height: 2.3;
+}
+
+/* Syamila Classic Theme (Kertas Kitab Kuning / Parchment) */
+.theme-syamila-classic {
+  --syamila-bg: #FAF6ED;
+  --syamila-surface: #FFFFFF;
+  --syamila-card: #F4EEDC;
+  --syamila-border: #E2D7BE;
+  --syamila-primary: #855823;
+  --syamila-primary-hover: #6D4619;
+  --syamila-text: #2D2518;
+  --syamila-muted: #74644F;
+  --syamila-badge: #ECE2C8;
+}
+
+/* Emerald Mushaf Theme */
+.theme-emerald-mushaf {
+  --syamila-bg: #F4F8F6;
+  --syamila-surface: #FFFFFF;
+  --syamila-card: #E8F2EC;
+  --syamila-border: #C8DECFA;
+  --syamila-primary: #176348;
+  --syamila-primary-hover: #0F4934;
+  --syamila-text: #192E24;
+  --syamila-muted: #527364;
+  --syamila-badge: #D8EBDF;
+}
+
+/* Light Theme */
+.theme-light {
+  --syamila-bg: #F8FAFC;
+  --syamila-surface: #FFFFFF;
+  --syamila-card: #F1F5F9;
+  --syamila-border: #E2E8F0;
+  --syamila-primary: #2563EB;
+  --syamila-primary-hover: #1D4ED8;
+  --syamila-text: #0F172A;
+  --syamila-muted: #64748B;
+  --syamila-badge: #E0E7FF;
+}
+
+/* Dark Scholastic Theme */
+.theme-dark {
+  --syamila-bg: #111418;
+  --syamila-surface: #181D23;
+  --syamila-card: #1E252D;
+  --syamila-border: #2C3542;
+  --syamila-primary: #D4A373;
+  --syamila-primary-hover: #C58F5B;
+  --syamila-text: #F1F5F9;
+  --syamila-muted: #94A3B8;
+  --syamila-badge: #27303D;
+}
+
+/* iOS & Android Safe Area and Touch Optimizations */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
+}
+
+.safe-bottom {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Touch device smooth scroll */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Prevent unwanted double tap zoom on interactive buttons */
+button, a, input, select {
+  touch-action: manipulation;
+}
+
+/* Syamila custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 120, 90, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 120, 90, 0.45);
+}
