@@ -287,9 +287,12 @@ export default function App() {
     setDeveloperModalOpen(true);
   }, []);
 
-  // Global Keyboard shortcuts (Ctrl+K for search, Esc to close modals)
+  // Global Keyboard shortcuts (Ctrl+K for search, ArrowLeft/Right for hadith navigation, Esc to close modals)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea' || (document.activeElement as HTMLElement)?.isContentEditable;
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen((prev) => !prev);
@@ -304,16 +307,22 @@ export default function App() {
         setPwaInstallOpen(false);
         setSanadGraphOpen(false);
         setDeveloperModalOpen(false);
+      } else if (!isInput && !searchOpen && !aiAssistantOpen && !settingsOpen && !bookmarksOpen && !mujamOpen && !jarhModalOpen && !statsOpen && !sanadGraphOpen && !developerModalOpen) {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+          handleNextHadith();
+        } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+          handlePrevHadith();
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [handleNextHadith, handlePrevHadith, searchOpen, aiAssistantOpen, settingsOpen, bookmarksOpen, mujamOpen, jarhModalOpen, statsOpen, sanadGraphOpen, developerModalOpen]);
 
   return (
     <div 
-      className={`min-h-screen flex flex-col font-sans theme-${settings.theme} transition-colors duration-200`}
+      className={`h-[100dvh] max-h-[100dvh] w-full flex flex-col font-sans theme-${settings.theme} overflow-hidden`}
       style={{
         backgroundColor: 'var(--syamila-bg)',
         color: 'var(--syamila-text)'
@@ -342,7 +351,7 @@ export default function App() {
       />
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto relative">
+      <div className="flex-1 flex max-w-7xl w-full mx-auto relative min-h-0 overflow-hidden">
         {/* Left Book Explorer & Chapter Sidebar */}
         <KitabSidebar
           isOpen={sidebarOpen}

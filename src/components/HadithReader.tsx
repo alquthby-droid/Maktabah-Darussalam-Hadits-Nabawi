@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -20,7 +20,8 @@ import {
   Compass,
   TrendingUp,
   GitBranch,
-  UserCheck
+  UserCheck,
+  MoveHorizontal
 } from 'lucide-react';
 import { HadithItem, SyamilaSettings, KitabInfo } from '../types';
 import { removeTashkil, formatHadithForCopy } from '../utils/arabic';
@@ -77,6 +78,121 @@ export const HadithReader: React.FC<HadithReaderProps> = ({
   const [copied, setCopied] = useState<boolean>(false);
   const [showSanadDetails, setShowSanadDetails] = useState<boolean>(settings.showSanad);
 
+  // Panel reference for instantaneous scroll-to-top on hadith change
+  const panelRef = useRef<HTMLElement>(null);
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const mouseStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState<number>(0);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [swipeNotice, setSwipeNotice] = useState<string | null>(null);
+
+  // Smoothly scroll back to top of reader whenever the displayed hadith changes
+  useEffect(() => {
+    if (panelRef.current) {
+      panelRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [hadith?.id]);
+
+  // Touch Swipe Handlers for smooth mobile gesture navigation
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+    };
+    setIsDragging(false);
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current || e.touches.length !== 1) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+
+    // Detect if user intention is horizontal swipe (x movement dominates y movement)
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      setIsDragging(true);
+      // Elastic damping factor
+      let damping = 0.42;
+      if ((dx > 0 && !hasPrevious) || (dx < 0 && !hasNext)) {
+        damping = 0.12; // boundary resistance
+      }
+      const clampedOffset = Math.max(-130, Math.min(130, dx * damping));
+      setDragOffset(clampedOffset);
+    }
+  }, [hasNext, hasPrevious]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    const dt = Date.now() - touchStartRef.current.time;
+
+    touchStartRef.current = null;
+    setIsDragging(false);
+    setDragOffset(0);
+
+    // If gesture was predominantly horizontal
+    if (Math.abs(dx) > Math.abs(dy) * 1.15) {
+      const isQuickFlick = dt < 320 && Math.abs(dx) > 35;
+      const isLongSwipe = Math.abs(dx) > 60;
+
+      if (isQuickFlick || isLongSwipe) {
+        if (dx < 0 && hasNext) {
+          onNext();
+          setSwipeNotice('Hadits Selanjutnya ➔');
+          setTimeout(() => setSwipeNotice(null), 1200);
+        } else if (dx > 0 && hasPrevious) {
+          onPrevious();
+          setSwipeNotice('⬅ Hadits Sebelumnya');
+          setTimeout(() => setSwipeNotice(null), 1200);
+        }
+      }
+    }
+  }, [hasNext, hasPrevious, onNext, onPrevious]);
+
+  // Desktop Mouse Drag Gesture Handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('textarea')) return;
+    mouseStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!mouseStartRef.current) return;
+    const dx = e.clientX - mouseStartRef.current.x;
+    const dy = e.clientY - mouseStartRef.current.y;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 12) {
+      setIsDragging(true);
+      let damping = 0.35;
+      if ((dx > 0 && !hasPrevious) || (dx < 0 && !hasNext)) {
+        damping = 0.1;
+      }
+      setDragOffset(Math.max(-110, Math.min(110, dx * damping)));
+    }
+  }, [hasNext, hasPrevious]);
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (!mouseStartRef.current) return;
+    const dx = e.clientX - mouseStartRef.current.x;
+    const dy = e.clientY - mouseStartRef.current.y;
+    mouseStartRef.current = null;
+    setIsDragging(false);
+    setDragOffset(0);
+
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) {
+      if (dx < 0 && hasNext) {
+        onNext();
+      } else if (dx > 0 && hasPrevious) {
+        onPrevious();
+      }
+    }
+  }, [hasNext, hasPrevious, onNext, onPrevious]);
+
   if (!hadith) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center"
@@ -124,8 +240,50 @@ export const HadithReader: React.FC<HadithReaderProps> = ({
   return (
     <main 
       id="hadith-reader-panel" 
-      className="flex-1 overflow-y-auto px-3 sm:px-8 py-6 max-w-5xl mx-auto w-full transition-colors duration-200 pb-28 md:pb-8 touch-scroll"
+      ref={panelRef}
+      className="flex-1 overflow-y-auto px-3 sm:px-8 py-6 max-w-5xl mx-auto w-full pb-28 md:pb-8 touch-scroll relative"
     >
+      {/* Floating Swipe Indicator Pill while dragging */}
+      {isDragging && Math.abs(dragOffset) > 12 && (
+        <div 
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none px-4 py-1.5 rounded-full shadow-lg text-xs font-semibold flex items-center gap-2 backdrop-blur-md transition-opacity animate-in fade-in zoom-in-95 duration-150"
+          style={{
+            backgroundColor: dragOffset < 0 
+              ? (hasNext ? 'rgba(180, 83, 9, 0.95)' : 'rgba(75, 75, 75, 0.92)')
+              : (hasPrevious ? 'rgba(180, 83, 9, 0.95)' : 'rgba(75, 75, 75, 0.92)'),
+            color: '#FFFFFF'
+          }}
+        >
+          {dragOffset < 0 ? (
+            hasNext ? (
+              <>
+                <span>Geser ke Hadits Selanjutnya</span>
+                <ChevronRight className="w-4 h-4 animate-pulse" />
+              </>
+            ) : (
+              <span>Sudah di Hadits Terakhir</span>
+            )
+          ) : (
+            hasPrevious ? (
+              <>
+                <ChevronLeft className="w-4 h-4 animate-pulse" />
+                <span>Geser ke Hadits Sebelumnya</span>
+              </>
+            ) : (
+              <span>Sudah di Hadits Pertama</span>
+            )
+          )}
+        </div>
+      )}
+
+      {/* Ephemeral Notification on Successful Swipe Navigation */}
+      {swipeNotice && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none px-4 py-1.5 rounded-full bg-amber-700/95 text-white text-xs font-semibold shadow-lg flex items-center gap-1.5 animate-bounce">
+          <MoveHorizontal className="w-3.5 h-3.5" />
+          <span>{swipeNotice}</span>
+        </div>
+      )}
+
       {/* Top Header Navigation & Meta */}
       <div 
         className="mb-6 p-4 sm:p-5 rounded-2xl border shadow-2xs transition-colors"
@@ -258,7 +416,7 @@ export const HadithReader: React.FC<HadithReaderProps> = ({
         <div className="pt-3 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`px-2.5 py-0.5 rounded-full font-semibold border text-[11px] shadow-2xs ${getDerajatBadgeColor(hadith.derajat)}`}>
-              <ShieldCheck className="w-3 h-3 inline mr-1 -mt-0.5" />
+              <ShieldCheck className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
               {hadith.derajat}
             </span>
             <span className="opacity-75">
@@ -275,16 +433,71 @@ export const HadithReader: React.FC<HadithReaderProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Mobile Swipe Gesture Helper Bar */}
+        <div className="sm:hidden pt-2.5 border-t mt-2.5 flex items-center justify-between text-[11px] opacity-75" style={{ borderColor: 'var(--syamila-border)' }}>
+          <span className="flex items-center gap-1">
+            <ChevronLeft className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+            <span>Geser kanan: sebelumnya</span>
+          </span>
+          <span className="flex items-center gap-1">
+            <span>Geser kiri: selanjutnya</span>
+            <ChevronRight className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+          </span>
+        </div>
       </div>
 
-      {/* Main Hadith Reading Paper */}
+      {/* Floating Quick Action Buttons on Mobile Edges */}
+      {hasPrevious && (
+        <button
+          onClick={onPrevious}
+          className="fixed left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full shadow-lg border backdrop-blur-md opacity-85 hover:opacity-100 transition-all active:scale-95 sm:hidden"
+          style={{
+            backgroundColor: 'var(--syamila-surface)',
+            borderColor: 'var(--syamila-border)',
+            color: 'var(--syamila-text)'
+          }}
+          title="Hadits Sebelumnya (Geser layar ke kanan)"
+        >
+          <ChevronLeft className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+        </button>
+      )}
+
+      {hasNext && (
+        <button
+          onClick={onNext}
+          className="fixed right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 p-2.5 rounded-full shadow-lg border backdrop-blur-md opacity-85 hover:opacity-100 transition-all active:scale-95 sm:hidden"
+          style={{
+            backgroundColor: 'var(--syamila-surface)',
+            borderColor: 'var(--syamila-border)',
+            color: 'var(--syamila-text)'
+          }}
+          title="Hadits Selanjutnya (Geser layar ke kiri)"
+        >
+          <ChevronRight className="w-5 h-5 text-amber-700 dark:text-amber-300" />
+        </button>
+      )}
+
+      {/* Main Hadith Reading Paper with Smooth Drag & Swipe */}
       <article 
         id={`hadith-card-${hadith.id}`}
-        className="p-5 sm:p-8 rounded-2xl border shadow-xs transition-colors relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => { setIsDragging(false); setDragOffset(0); }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        className={`p-5 sm:p-8 rounded-2xl border shadow-xs relative swipe-container select-text ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
         style={{
           backgroundColor: 'var(--syamila-surface)',
           borderColor: 'var(--syamila-border)',
-          color: 'var(--syamila-text)'
+          color: 'var(--syamila-text)',
+          transform: `translateX(${dragOffset}px)`,
+          transition: isDragging ? 'none' : 'transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1)',
+          willChange: isDragging ? 'transform' : 'auto',
         }}
       >
         {/* Sanad Chain Block (Collapsible) */}

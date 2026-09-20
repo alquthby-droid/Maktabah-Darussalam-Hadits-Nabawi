@@ -188,7 +188,7 @@ export const KitabSidebar: React.FC<KitabSidebarProps> = ({
         )}
 
         {/* Kitab Categories */}
-        <div className="p-2 border-b flex gap-1 overflow-x-auto text-[11px] no-scrollbar" style={{ borderColor: 'var(--syamila-border)' }}>
+        <div className="p-2 border-b flex gap-1 overflow-x-auto text-[11px] no-scrollbar touch-scroll scroll-smooth" style={{ borderColor: 'var(--syamila-border)' }}>
           {categories.map((cat) => (
             <button
               key={cat}
@@ -221,7 +221,7 @@ export const KitabSidebar: React.FC<KitabSidebarProps> = ({
         </div>
 
         {/* Scrollable Books & Chapters List */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-black/5 dark:divide-white/5">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-black/5 dark:divide-white/5 touch-scroll overscroll-contain">
           {filteredKitabs.map((kitab) => {
             const isSelected = kitab.id === selectedKitabId;
             return (
