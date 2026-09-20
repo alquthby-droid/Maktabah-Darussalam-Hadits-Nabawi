@@ -14,16 +14,19 @@ import { PWAInstallModal } from './components/PWAInstallModal';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { SanadGraphModal } from './components/SanadGraphModal';
 import { DeveloperModal } from './components/DeveloperModal';
+import { BackupRestoreModal } from './components/BackupRestoreModal';
 import { KITAB_LIST, HADITH_DATABASE } from './data/hadithData';
 import { 
   SyamilaSettings, 
   BookmarkItem, 
   HadithNote, 
   HadithItem,
-  ReadingStats
+  ReadingStats,
+  BackupData
 } from './types';
 import {
   loadReadingStats,
+  saveReadingStats,
   recordHadithRead,
   calculateDailyProgress,
   calculateReadingStreak
@@ -93,9 +96,21 @@ export default function App() {
   const [sanadGraphOpen, setSanadGraphOpen] = useState<boolean>(false);
   const [graphTargetHadith, setGraphTargetHadith] = useState<HadithItem | null>(null);
   const [developerModalOpen, setDeveloperModalOpen] = useState<boolean>(false);
+  const [backupModalOpen, setBackupModalOpen] = useState<boolean>(false);
 
   // Reading Statistics State
   const [readingStats, setReadingStats] = useState<ReadingStats>(() => loadReadingStats());
+
+  // Restore imported data handler
+  const handleRestoreData = useCallback((restoredData: BackupData) => {
+    setBookmarks(restoredData.bookmarks);
+    setNotes(restoredData.notes);
+    setReadingStats(restoredData.readingStats);
+    saveReadingStats(restoredData.readingStats);
+    if (restoredData.settings) {
+      setSettings((prev) => ({ ...prev, ...restoredData.settings }));
+    }
+  }, []);
 
   // Calculate today's reading progress & streak
   const todayProgress = useMemo(() => calculateDailyProgress(readingStats), [readingStats]);
@@ -307,7 +322,8 @@ export default function App() {
         setPwaInstallOpen(false);
         setSanadGraphOpen(false);
         setDeveloperModalOpen(false);
-      } else if (!isInput && !searchOpen && !aiAssistantOpen && !settingsOpen && !bookmarksOpen && !mujamOpen && !jarhModalOpen && !statsOpen && !sanadGraphOpen && !developerModalOpen) {
+        setBackupModalOpen(false);
+      } else if (!isInput && !searchOpen && !aiAssistantOpen && !settingsOpen && !bookmarksOpen && !mujamOpen && !jarhModalOpen && !statsOpen && !sanadGraphOpen && !developerModalOpen && !backupModalOpen) {
         if (e.key === 'ArrowRight' || e.key === 'PageDown') {
           handleNextHadith();
         } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
@@ -318,7 +334,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleNextHadith, handlePrevHadith, searchOpen, aiAssistantOpen, settingsOpen, bookmarksOpen, mujamOpen, jarhModalOpen, statsOpen, sanadGraphOpen, developerModalOpen]);
+  }, [handleNextHadith, handlePrevHadith, searchOpen, aiAssistantOpen, settingsOpen, bookmarksOpen, mujamOpen, jarhModalOpen, statsOpen, sanadGraphOpen, developerModalOpen, backupModalOpen]);
 
   return (
     <div 
@@ -339,6 +355,7 @@ export default function App() {
         onOpenDeveloperProfile={handleOpenDeveloperProfile}
         onOpenStats={() => setStatsOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenBackup={() => setBackupModalOpen(true)}
         onOpenInstallPrompt={() => setPwaInstallOpen(true)}
         onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         settings={settings}
@@ -433,6 +450,7 @@ export default function App() {
         stats={readingStats}
         onUpdateStats={setReadingStats}
         onSelectHadith={handleSelectHadithDirect}
+        onOpenBackup={() => setBackupModalOpen(true)}
       />
 
       <BookmarksNotesDrawer
@@ -445,6 +463,7 @@ export default function App() {
         onSaveNote={handleSaveNote}
         onDeleteNote={handleDeleteNote}
         activeHadith={currentHadith}
+        onOpenBackup={() => setBackupModalOpen(true)}
       />
 
       <SettingsModal
@@ -453,6 +472,18 @@ export default function App() {
         settings={settings}
         onUpdateSettings={(updated) => setSettings((prev) => ({ ...prev, ...updated }))}
         onOpenDeveloperProfile={handleOpenDeveloperProfile}
+        onOpenBackup={() => setBackupModalOpen(true)}
+      />
+
+      {/* Cadangan & Pulihkan Data JSON Modal */}
+      <BackupRestoreModal
+        isOpen={backupModalOpen}
+        onClose={() => setBackupModalOpen(false)}
+        bookmarks={bookmarks}
+        notes={notes}
+        readingStats={readingStats}
+        settings={settings}
+        onRestoreData={handleRestoreData}
       />
 
       {/* Sanad Graph Interactive D3.js Visualization Modal */}

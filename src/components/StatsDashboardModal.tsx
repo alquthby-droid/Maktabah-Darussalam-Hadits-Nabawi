@@ -13,7 +13,8 @@ import {
   LineChart,
   Settings2,
   Sparkles,
-  BookMarked
+  BookMarked,
+  Database
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -43,6 +44,7 @@ interface StatsDashboardModalProps {
   stats: ReadingStats;
   onUpdateStats: (newStats: ReadingStats) => void;
   onSelectHadith?: (kitabId: string, hadithId: string) => void;
+  onOpenBackup?: () => void;
 }
 
 export const StatsDashboardModal: React.FC<StatsDashboardModalProps> = ({
@@ -51,6 +53,7 @@ export const StatsDashboardModal: React.FC<StatsDashboardModalProps> = ({
   stats,
   onUpdateStats,
   onSelectHadith,
+  onOpenBackup,
 }) => {
   const [chartType, setChartType] = useState<'bar' | 'area'>('bar');
   const [isEditingGoal, setIsEditingGoal] = useState<boolean>(false);
@@ -191,14 +194,31 @@ export const StatsDashboardModal: React.FC<StatsDashboardModalProps> = ({
             </div>
           </div>
 
-          <button
-            id="btn-close-stats-modal"
-            onClick={onClose}
-            className="p-2 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            title="Tutup (Esc)"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onOpenBackup && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenBackup();
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-600/30 text-amber-900 dark:text-amber-200 bg-amber-600/10 hover:bg-amber-600/20 transition-colors cursor-pointer"
+                title="Cadangkan Riwayat & Statistik ke JSON"
+              >
+                <Database className="w-3.5 h-3.5 text-amber-600" />
+                <span className="hidden sm:inline">Cadangkan Data</span>
+              </button>
+            )}
+
+            <button
+              id="btn-close-stats-modal"
+              onClick={onClose}
+              className="p-2 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+              title="Tutup (Esc)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Scrollable Content */}

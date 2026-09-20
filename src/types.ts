@@ -220,3 +220,27 @@ export interface ReadingStats {
   dailyGoal: number;
   records: ReadingRecord[];
 }
+
+export interface BackupData {
+  bookmarks: BookmarkItem[];
+  notes: HadithNote[];
+  readingStats: ReadingStats;
+  settings?: SyamilaSettings;
+}
+
+export interface BackupPayload {
+  version: number;
+  appName: string;
+  exportedAt: string;
+  data: BackupData;
+}
+
+export interface BackupSummary {
+  bookmarksCount: number;
+  notesCount: number;
+  readingRecordsCount: number;
+  dailyGoal?: number;
+  hasSettings: boolean;
+  exportedAt?: string;
+  appName?: string;
+}

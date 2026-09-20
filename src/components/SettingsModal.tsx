@@ -10,7 +10,9 @@ import {
   Sliders,
   UserCheck,
   Building2,
-  GraduationCap
+  GraduationCap,
+  Database,
+  ArrowDownUp
 } from 'lucide-react';
 import { SyamilaSettings, SyamilaTheme, ArabicFontFamily } from '../types';
 
@@ -20,6 +22,7 @@ interface SettingsModalProps {
   settings: SyamilaSettings;
   onUpdateSettings: (newSettings: Partial<SyamilaSettings>) => void;
   onOpenDeveloperProfile?: () => void;
+  onOpenBackup?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -28,6 +31,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
   onUpdateSettings,
   onOpenDeveloperProfile,
+  onOpenBackup,
 }) => {
   if (!isOpen) return null;
 
@@ -241,6 +245,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="w-4 h-4 accent-amber-600 rounded"
                 />
               </label>
+            </div>
+          </div>
+
+          {/* Section: Cadangan & Pemulihan Data JSON */}
+          <div className="space-y-2.5 pt-2 border-t" style={{ borderColor: 'var(--syamila-border)' }}>
+            <label className="font-bold text-xs uppercase tracking-wider opacity-75 flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+              <Database className="w-4 h-4 text-amber-600" />
+              <span>Cadangan & Sinkronisasi Antar-Perangkat</span>
+            </label>
+            <div 
+              className="p-3.5 rounded-xl border space-y-2.5"
+              style={{ borderColor: 'var(--syamila-border)', backgroundColor: 'var(--syamila-card)' }}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-xs sm:text-sm">Ekspor & Impor Data (JSON)</h4>
+                  <p className="text-[11px] opacity-75 mt-0.5">
+                    Amankan seluruh hadits yang ditandai, catatan faedah ilmiah, dan riwayat membaca ke file JSON.
+                  </p>
+                </div>
+              </div>
+
+              {onOpenBackup && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenBackup();
+                  }}
+                  className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-gradient-to-r from-amber-700 to-amber-900 hover:from-amber-800 hover:to-amber-950 text-white shadow-xs flex items-center justify-center gap-2 transition-transform active:scale-98 cursor-pointer"
+                >
+                  <ArrowDownUp className="w-3.5 h-3.5" />
+                  <span>Buka Menu Ekspor & Pulihkan Cadangan</span>
+                </button>
+              )}
             </div>
           </div>
 

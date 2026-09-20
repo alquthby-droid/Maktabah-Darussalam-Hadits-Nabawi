@@ -188,14 +188,22 @@ export const KitabSidebar: React.FC<KitabSidebarProps> = ({
         )}
 
         {/* Kitab Categories */}
-        <div className="p-2 border-b flex gap-1 overflow-x-auto text-[11px] no-scrollbar touch-scroll scroll-smooth" style={{ borderColor: 'var(--syamila-border)' }}>
+        <div 
+          className="p-2 border-b flex gap-1 overflow-x-auto text-[11px] no-scrollbar touch-scroll scroll-smooth select-none" 
+          style={{ 
+            borderColor: 'var(--syamila-border)',
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x pan-y',
+            overscrollBehaviorX: 'contain'
+          }}
+        >
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className={`px-2.5 py-1 rounded-md whitespace-nowrap transition-colors ${
+              className={`px-2.5 py-1 rounded-md whitespace-nowrap shrink-0 transition-colors cursor-pointer ${
                 activeCategory === cat
-                  ? 'bg-amber-700 text-white font-semibold'
+                  ? 'bg-amber-700 text-white font-semibold shadow-2xs'
                   : 'hover:bg-black/5 dark:hover:bg-white/5 opacity-80'
               }`}
             >

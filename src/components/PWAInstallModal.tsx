@@ -33,12 +33,20 @@ export const PWAInstallModal: React.FC<PWAInstallModalProps> = ({ isOpen, onClos
         {/* Header with App Brand */}
         <div className="p-5 border-b flex items-start justify-between bg-gradient-to-r from-emerald-900/30 to-amber-900/20" style={{ borderColor: 'var(--syamila-border)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-500/30 shadow-md bg-emerald-950 flex items-center justify-center shrink-0">
-              <img src="/pwa-192x192.png" alt="Syamila" className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-xl overflow-hidden border border-amber-500/30 shadow-md bg-white/95 dark:bg-black/30 flex items-center justify-center shrink-0">
+              <img 
+                src="https://cdn.phototourl.com/free/2026-09-20-b0c74d12-3376-480e-b5a0-efb20f8b4a76.png" 
+                alt="Maktabah Darussalam" 
+                className="w-full h-full object-contain p-1"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logo-darussalam.png';
+                }}
+              />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-tight">Pasang Aplikasi Syamila</h3>
-              <p className="text-xs opacity-70 mt-0.5">Akses Cepat, Ringan & 100% Offline</p>
+              <h3 className="font-bold text-base leading-tight">Pasang Maktabah Darussalam</h3>
+              <p className="text-xs opacity-70 mt-0.5">Aplikasi Hadits Lengkap & 100% Offline</p>
             </div>
           </div>
           <button

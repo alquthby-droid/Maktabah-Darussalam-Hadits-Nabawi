@@ -8,7 +8,9 @@ import {
   Plus, 
   Edit3, 
   Calendar,
-  BookOpen
+  BookOpen,
+  Database,
+  ArrowDownUp
 } from 'lucide-react';
 import { BookmarkItem, HadithNote, HadithItem } from '../types';
 
@@ -22,6 +24,7 @@ interface BookmarksNotesDrawerProps {
   onSaveNote: (hadithId: string, noteText: string) => void;
   onDeleteNote: (hadithId: string) => void;
   activeHadith: HadithItem | null;
+  onOpenBackup?: () => void;
 }
 
 export const BookmarksNotesDrawer: React.FC<BookmarksNotesDrawerProps> = ({
@@ -34,6 +37,7 @@ export const BookmarksNotesDrawer: React.FC<BookmarksNotesDrawerProps> = ({
   onSaveNote,
   onDeleteNote,
   activeHadith,
+  onOpenBackup,
 }) => {
   const [activeTab, setActiveTab] = useState<'bookmarks' | 'notes'>('bookmarks');
   const [editingNoteHadithId, setEditingNoteHadithId] = useState<string | null>(null);
@@ -72,12 +76,24 @@ export const BookmarksNotesDrawer: React.FC<BookmarksNotesDrawerProps> = ({
             <Bookmark className="w-5 h-5 text-amber-600" />
             <h3 className="font-bold text-base">Markah & Catatan Kajian</h3>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            {onOpenBackup && (
+              <button
+                onClick={onOpenBackup}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border border-amber-600/30 text-amber-900 dark:text-amber-200 bg-amber-600/10 hover:bg-amber-600/20 transition-colors cursor-pointer"
+                title="Cadangkan (Ekspor) & Pulihkan (Impor) Data JSON"
+              >
+                <Database className="w-3.5 h-3.5 text-amber-600" />
+                <span>Ekspor / Impor</span>
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tab switcher */}
@@ -282,6 +298,25 @@ export const BookmarksNotesDrawer: React.FC<BookmarksNotesDrawerProps> = ({
                 )}
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Drawer Footer with Quick Backup Action */}
+        <div 
+          className="p-3 border-t flex items-center justify-between text-xs" 
+          style={{ borderColor: 'var(--syamila-border)', backgroundColor: 'var(--syamila-card)' }}
+        >
+          <span className="opacity-70 text-[11px]">
+            Simpan data ke JSON untuk pindah perangkat
+          </span>
+          {onOpenBackup && (
+            <button
+              onClick={onOpenBackup}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-2xs transition-transform active:scale-95 cursor-pointer"
+            >
+              <ArrowDownUp className="w-3.5 h-3.5" />
+              <span>Cadangkan Data</span>
+            </button>
           )}
         </div>
       </div>
